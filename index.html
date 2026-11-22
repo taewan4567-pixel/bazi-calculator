@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bazi / Four Pillars Calculator - Free Chinese Birth Chart</title>
+<meta name="description" content="Free Bazi (Four Pillars of Destiny) calculator. Enter your birth date and time to see your four pillars, five element balance, Day Master and 10-year luck pillars. Runs entirely in your browser.">
+<style>
+:root{--bg:#faf7f2;--card:#fff;--ink:#2b2622;--muted:#6f665e;--line:#e7dfd4;--accent:#9b2c2c;--soft:#f6ebe3;
+--wood:#3f8f4f;--fire:#d0453a;--earth:#b8862f;--metal:#8a8f98;--water:#2f6db3}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif}
+header{padding:28px 16px 8px;text-align:center}
+header h1{margin:0;font-size:1.6rem;letter-spacing:.3px}
+header p{margin:6px 0 0;color:var(--muted);font-size:.95rem}
+main{max-width:760px;margin:0 auto;padding:8px 14px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+h2{font-size:1.15rem;margin:0 0 12px}
+label{display:block;font-weight:600;font-size:.92rem;margin:0 0 4px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.row.one{grid-template-columns:1fr}
+input[type=date],input[type=time],select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:1rem;background:#fff;color:var(--ink)}
+.inline{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-weight:400}
+.inline label{font-weight:400;display:flex;gap:6px;align-items:center;margin:0}
+.btn{display:inline-block;border:0;border-radius:10px;padding:12px 18px;font-size:1rem;font-weight:700;cursor:pointer;background:var(--accent);color:#fff;width:100%}
+.btn.ghost{background:var(--soft);color:var(--accent);width:auto;font-weight:600;padding:9px 12px;font-size:.92rem}
+.err{color:#b00020;font-size:.92rem;margin-top:8px}
+.hide{display:none!important}
+.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+.pcol{border:1px solid var(--line);border-radius:12px;padding:8px 4px;background:#fffdfa}
+.pcol.dm{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.pcol .t{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.glyph{font-size:2.1rem;line-height:1.15;font-weight:700;margin-top:4px}
+.en{font-size:.78rem;color:var(--muted);line-height:1.3;min-height:2.1em}
+.pcol.empty .glyph{color:#c9c0b5}
+.bars .b{display:grid;grid-template-columns:70px 1fr 28px;gap:8px;align-items:center;margin:6px 0;font-size:.92rem}
+.track{background:#f1ece5;border-radius:6px;height:14px;overflow:hidden}
+.fill{height:100%;border-radius:6px}
+.Wood{color:var(--wood)}.Fire{color:var(--fire)}.Earth{color:var(--earth)}.Metal{color:var(--metal)}.Water{color:var(--water)}
+.bg-Wood{background:var(--wood)}.bg-Fire{background:var(--fire)}.bg-Earth{background:var(--earth)}.bg-Metal{background:var(--metal)}.bg-Water{background:var(--water)}
+.luck{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.lp{flex:0 0 84px;border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center;background:#fffdfa}
+.lp.now{background:var(--soft);border-color:var(--accent)}
+.lp .g{font-size:1.5rem;font-weight:700;line-height:1.2}
+.lp .a{font-size:.8rem;color:var(--muted)}
+.lp .tag{font-size:.7rem;font-weight:700;color:var(--accent)}
+.muted{color:var(--muted);font-size:.9rem}
+.checks{display:flex;gap:8px;flex-wrap:wrap}
+table.ck{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:10px}
+table.ck td,table.ck th{border-top:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#1d7a3a;font-weight:700}.ng{color:#b00020;font-weight:700}
+details{margin-top:6px}
+pre{white-space:pre-wrap;font-size:.75rem;background:#f6f3ee;padding:10px;border-radius:8px;overflow:auto}
+footer{text-align:center;color:var(--muted);font-size:.85rem;padding:10px 16px 30px}
+@media (max-width:420px){.glyph{font-size:1.8rem}.row{grid-template-columns:1fr}.card{padding:14px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Bazi / Four Pillars Calculator</h1>
+  <p>Your Chinese birth chart in seconds. Everything runs in your browser; nothing is sent anywhere.</p>
+</header>
+<main>
+  <section class="card">
+    <h2>Your birth details</h2>
+    <form id="f" autocomplete="off">
+      <div class="row one">
+        <div class="inline" role="radiogroup" aria-label="Calendar">
+          <label><input type="radio" name="cal" value="solar" checked> Gregorian (solar)</label>
+          <label><input type="radio" name="cal" value="lunar"> Chinese lunar</label>
+          <label id="leapWrap" class="hide"><input type="checkbox" id="leap"> Leap month</label>
+        </div>
+      </div>
+      <div class="row">
+        <div><label for="date">Date of birth</label><input type="date" id="date" required min="1900-01-01" max="2100-12-31"></div>
+        <div><label for="time">Time of birth (local clock)</label><input type="time" id="time" value="12:00"></div>
+      </div>
+      <div class="row">
+        <div class="inline"><label><input type="checkbox" id="unknown"> I don't know my birth time</label></div>
+        <div class="inline" role="radiogroup" aria-label="Gender">
+          <span style="font-weight:600;font-size:.92rem">Gender:</span>
+          <label><input type="radio" name="gender" value="female" checked> Female</label>
+          <label><input type="radio" name="gender" value="male"> Male</label>
+        </div>
+      </div>
+      <p class="muted" style="margin:0 0 12px">Gender is used only to set the direction of the 10-year luck pillars, as in the traditional method. Enter the time shown on the clock where you were born.</p>
+      <button class="btn" type="submit">Calculate my Four Pillars</button>
+      <div id="err" class="err hide"></div>
+    </form>
+  </section>
+
+  <div id="out" class="hide">
+    <section class="card">
+      <h2>Your Four Pillars</h2>
+      <div class="pillars" id="pillars"></div>
+      <p class="muted" id="pnote" style="margin:10px 0 0"></p>
+    </section>
+
+    <section class="card">
+      <h2>Five Elements balance</h2>
+      <div class="bars" id="bars"></div>
+      <p class="muted" id="barNote" style="margin:8px 0 0"></p>
+    </section>
+
+    <section class="card">
+      <h2 id="dmTitle">Your Day Master</h2>
+      <p id="dmText" style="margin:0"></p>
+    </section>
+
+    <section class="card">
+      <h2>10-Year Luck Pillars</h2>
+      <p class="muted" id="luckMeta" style="margin:0 0 10px"></p>
+      <div class="luck" id="luck"></div>
+    </section>
+
+    <section class="card">
+      <h2 id="yearTitle">This year</h2>
+      <p id="yearText" style="margin:0"></p>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Check examples</h2>
+    <p class="muted" style="margin:0 0 10px">Compare the calculator with known reference charts.</p>
+    <div class="checks">
+      <button class="btn ghost" data-ex="0" type="button">Example A</button>
+      <button class="btn ghost" data-ex="1" type="button">Example B</button>
+      <button class="btn ghost" data-ex="2" type="button">Example C</button>
+    </div>
+    <table class="ck hide" id="ck"><thead><tr><th>Input</th><th>Expected</th><th>Calculated</th><th>Result</th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section class="card" id="licenses">
+    <h2>About &amp; Licenses</h2>
+    <p class="muted" style="margin:0">Calendar and pillar calculations use the open-source <b>manseryeok</b> library (MIT License, &copy; 2025 Yoohyojun, github.com/yhj1024/manseryeok). Texts and interface are original to this site.</p>
+    <details><summary>Show license text</summary>
+<pre>manseryeok - MIT License
+
+Copyright (c) 2025 Yoohyojun
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</pre>
+    </details>
+  </section>
+</main>
+<footer>
+  <p><b>For entertainment and self-reflection only.</b> This chart does not predict the future and is not medical, financial, legal or psychological advice. Your choices shape your life.</p>
+</footer>
+<script src="manseryeok.min.js"></script>
+<script src="bazi.js"></script>
+</body>
+</html>
